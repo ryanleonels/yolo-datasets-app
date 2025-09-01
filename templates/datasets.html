@@ -1,0 +1,37 @@
+{% extends "layout.html" %}
+
+{% block title %}
+
+    Datasets List
+    
+{% endblock %}
+
+{% block main %}
+
+        <h3>Uploaded Datasets:</h3>
+
+        <div class="row mx-auto">
+
+            {% for dataset in datasets_info %}
+
+            <a href="images.html?id={{dataset['id']}}">
+                <div class="col-sm-6 mx-auto">
+                    <div class="card text-white bg-secondary mb-3">
+                        <div class="card-body">
+                            <p> 
+                                <b>{{dataset['name']}}</b> [{{dataset['task'].capitalize()}}]
+                            </p>
+                            <p> 
+                                {{dataset['description']}}
+                            </p>
+                            <p> 
+                                <b>{{dataset['classes_count']}}</b> classes | <b>{{dataset['images_count']}}</b> images | <b>{{dataset['dataset_size']}}</b>
+                            </p>    
+                        </div>
+                    </div>
+                </div>
+            </a>
+
+        {% endfor %}
+
+{% endblock %}

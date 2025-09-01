@@ -1,0 +1,64 @@
+{% extends "layout.html" %}
+
+{% block title %}
+
+    Datasets List
+    
+{% endblock %}
+
+{% block main %}
+
+        <h3>Images with Labels for Dataset {{dataset_info['name']}}:</h3>
+
+        <div class="row mx-auto">
+
+            <table>
+                <tr>
+                    <td id="col_labels" style="width: 30%; vertical-align:top">
+                        <button>
+                            {% if image_set == 'train' %} <b> {% endif %}
+                                <a href="images.html?id={{dataset_info['_id']}}&set=train">Train</a>
+                            {% if image_set == 'train' %} </b> {% endif %}
+                        </button>
+                        <button>
+                            {% if image_set == 'val' %} <b> {% endif %}
+                                <a href="images.html?id={{dataset_info['_id']}}&set=val">Validation</a>
+                            {% if image_set == 'val' %} </b> {% endif %}
+                        </button>
+                        <button>
+                            {% if image_set == 'test' %} <b> {% endif %}
+                                <a href="images.html?id={{dataset_info['_id']}}&set=test">Test</a>
+                            {% if image_set == 'test' %} </b> {% endif %}
+                        </button>
+                        <br>
+                        {% for class1 in classes_counts %}
+                            <p>
+                                <a href="images.html?id={{dataset_info['_id']}}&set={{image_set}}&class={{class1['class_id']}}">{{class1['class_name']}}: {{class1['count']}} images</a>
+                            </p>
+                        {% endfor %}
+                    </td>
+                    <td id="col_images" style="width: 70%; vertical-align:top">
+                        {% for image in images_with_labels %}
+
+                            <div class="col-sm-6 mx-auto">
+                                <div class="card text-white bg-secondary mb-3">
+                                    <div class="card-body">
+                                        <p> 
+                                            <img src="{{image['image_url']}}" alt="{{image['image_name']}}">
+                                        </p>
+                                        <p> 
+                                            <b>{{image['label_names']}}</b>
+                                        </p>
+                                        <p> 
+                                            {{image['image_name']}}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                        {% endfor %}
+                    </td>
+                </tr>
+            </table>
+
+{% endblock %}

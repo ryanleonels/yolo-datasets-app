@@ -1,0 +1,40 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Upload Dataset
+{% endblock %}
+
+{% block main %}
+<h5>Upload your custom dataset formatted for Ultralytics HUB</h5>
+<br>
+<form action="/upload.html" method="post" enctype="multipart/form-data">
+    <div class="form-group">
+        <b>Dataset name:</b> <input autocomplete="off" autofocus name="name" id="name" type="text" required>
+    </div>
+    <br>
+    <div class="form-group">
+
+       <b>Task:</b>
+        <select class="mx-auto" name="task" id="task" placeholder="Task" style="width:auto;">
+
+        <option value="classify">Classify</option>
+        <option value="detect" selected>Detect</option>
+        <option value="obb">OBB</option>
+        <option value="segment">Segment</option>
+        <option value="pose">Pose</option>
+
+    </select>
+    </div>
+    <br>
+    <div class="form-group">
+        <b>Description:</b> <input autocomplete="off" autofocus id="description" name="description" type="text" required>
+    </div>
+        <br>
+    <div class="form-group">
+        <label><b>Dataset .zip file:</b></label>
+        <input type="file" name="file" required />  
+    </div>
+    <br>
+    <button type="submit" class="btn btn-primary">Upload</button>
+</form>
+{% endblock %}
