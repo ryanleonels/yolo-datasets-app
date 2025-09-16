@@ -236,9 +236,12 @@ def build_images_with_labels(images, image_labels, class_id, class_names):
             image_data[label['image_name']]['label_names'] += class_names[label['class_id']]
             image_data[image_name]['labels'].add(label['class_id'])
         image_data[label['image_name']]['label_data'].append((label['class_id'], label['label_data']))
+    print(image_data)
 
     for image in image_data:
-        if class_id == "" or class_id in image_data[image]['labels']:
+        print(class_id)
+        print(image_data[image]['labels'])
+        if class_id == "" or int(class_id) in image_data[image]['labels']:
             images_with_labels.append(image_data[image])
     
     return images_with_labels
