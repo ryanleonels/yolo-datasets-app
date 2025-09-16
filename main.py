@@ -2,6 +2,7 @@ import os
 import re
 import datetime
 import certifi
+import uuid
 
 from flask import Flask, render_template, request
 from pymongo.mongo_client import MongoClient
@@ -85,8 +86,9 @@ def upload():
     upload_time = upload_time.strftime("%Y-%m-%d %H:%M:%S.%f")
 
     # upload file
-    request.files['file'].save('/tmp/file')
-    file_length = os.stat('/tmp/file').st_size
+    tmpfilename = str(uuid.uuid4()) + '.zip'
+    request.files['file'].save(tempdir + tmpfilename)
+    file_length = os.stat(tempdir + tmpfilename).st_size
 
     # Compile upload details into Python dictionary
     dataset_upload["task"] = task
@@ -94,10 +96,14 @@ def upload():
     dataset_upload["description"] = description
     dataset_upload["upload_time"] = upload_time
     dataset_upload["size"] = file_length
+    dataset_upload["yaml_extra_data"] = ""
     
     # Add dataset to MongoDB Atlas database
     dataset_entry = datasets_table.insert_one(dataset_upload)
     dataset_id = str(dataset_entry.inserted_id)
+
+    # process classes, images, labels
+    process_zip_file(tempdir + tmpfilename, dataset_id, task)
 
     # Return confirmation message after dataset submission 
     return render_template("imported.html")
