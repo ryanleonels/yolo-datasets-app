@@ -9,6 +9,7 @@ from flask import redirect, render_template, request
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
 from config import *
+from google.cloud import storage
 
 client = MongoClient(mongodb_uri, server_api=ServerApi('1'), tlsCAFile=certifi.where())
 
@@ -260,8 +261,22 @@ def parse_yaml_file(yaml_filename):
     
     return data
 
-def upload_image(image_url):
-    return image_url
+def upload_blob(bucket_name, source_file_name, destination_blob_name):
+    """Uploads a file to the bucket."""
+    storage_client = storage.Client()
+    bucket = storage_client.bucket(bucket_name)
+    blob = bucket.blob(destination_blob_name)
+
+    blob.upload_from_filename(source_file_name)
+
+    print(
+        f"File {source_file_name} uploaded to {destination_blob_name} in bucket {bucket_name}."
+    )
+
+def upload_image(dataset_id, image_name, image_url):
+    bucket_file_name = str(dataset_id) + "_" + image_name
+    upload_blob(bucket_name, image_url, bucket_file_name)
+    return "http://storage.googleapis.com/" + str(bucket_name) + "/" + bucket_file_name
 
 def process_zip_file(filename, dataset_id, task = "detect"):
     try:
@@ -466,8 +481,8 @@ def process_zip_file(filename, dataset_id, task = "detect"):
         class_data = {'dataset_id': dataset_id, 'class_id': int(class1), 'class_name': classes[class1]}
         client['yolo_datasets']['dataset_classes'].insert_one(class_data)
     for image in images:
-        uploaded_image_url = upload_image(image[2])
-        image_data = {'dataset_id': dataset_id, 'image_set': image[0], 'image_name': image[1], 'image_url': image[2]}
+        uploaded_image_url = upload_image(dataset_id, image[1], image[2])
+        image_data = {'dataset_id': dataset_id, 'image_set': image[0], 'image_name': image[1], 'image_url': uploaded_image_url} # image_url = image[2] for mock
         client['yolo_datasets']['dataset_images'].insert_one(image_data)
     for label in labels:
         label_data = {'dataset_id': dataset_id, 'image_set': label[0], 'image_name': label[1], 'class_id': label[2], 'label_data': label[3]}
