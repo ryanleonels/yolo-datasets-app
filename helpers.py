@@ -261,21 +261,25 @@ def parse_yaml_file(yaml_filename):
     
     return data
 
-def upload_blob(bucket_name, source_file_name, destination_blob_name):
+def upload_blob(bucket_name, source_file_name, destination_blob_name, zip_file_name):
     """Uploads a file to the bucket."""
     storage_client = storage.Client()
     bucket = storage_client.bucket(bucket_name)
     blob = bucket.blob(destination_blob_name)
 
-    blob.upload_from_filename(source_file_name)
+    #blob.upload_from_filename(source_file_name)
+    archive = zipfile.ZipFile(zip_file_name)
+    f = archive.open(source_file_name, 'r')
+    blob.upload_from_file(f)
+    f.close()
 
     print(
         f"File {source_file_name} uploaded to {destination_blob_name} in bucket {bucket_name}."
     )
 
-def upload_image(dataset_id, image_name, image_url):
+def upload_image(dataset_id, image_name, image_url, zip_file_name):
     bucket_file_name = str(dataset_id) + "_" + image_name
-    upload_blob(bucket_name, image_url, bucket_file_name)
+    upload_blob(bucket_name, image_url, bucket_file_name, zip_file_name)
     return "http://storage.googleapis.com/" + str(bucket_name) + "/" + bucket_file_name
 
 def process_zip_file(filename, dataset_id, task = "detect"):
@@ -385,11 +389,11 @@ def process_zip_file(filename, dataset_id, task = "detect"):
                     if val_path != None and file.startswith(val_path) and file != val_path:
                         file_info = archive.getinfo(file)
                         if file_info.is_dir() is False:
-                            val_images.append(file[len(train_path):])
+                            val_images.append(file[len(val_path):])
                     if test_path != None and file.startswith(test_path) and file != test_path:
                         file_info = archive.getinfo(file)
                         if file_info.is_dir() is False:
-                            test_images.append(file[len(train_path):])
+                            test_images.append(file[len(test_path):])
                 classes = {}
                 if 'names' in data and data['names'] != None:
                     classes = data['names']
@@ -463,7 +467,7 @@ def process_zip_file(filename, dataset_id, task = "detect"):
     except zipfile.BadZipFile as error:
         print(error)
         return False
-
+    
     # write YAML extra data into MongoDB
     yaml_extra_data = {}
     for field in ['train', 'val', 'test', 'kpt_shape', 'flip_idx', 'download']:
@@ -474,14 +478,11 @@ def process_zip_file(filename, dataset_id, task = "detect"):
     client['yolo_datasets']['datasets'].update_one(filter_yaml, yaml_value)
 
     # write classes, images, labels data into MongoDB
-    classes_table = client['yolo_datasets']['dataset_classes']
-    images_table = client['yolo_datasets']['dataset_images']
-    labels_table = client['yolo_datasets']['dataset_labels']
     for class1 in classes:
         class_data = {'dataset_id': dataset_id, 'class_id': int(class1), 'class_name': classes[class1]}
         client['yolo_datasets']['dataset_classes'].insert_one(class_data)
     for image in images:
-        uploaded_image_url = upload_image(dataset_id, image[1], image[2])
+        uploaded_image_url = upload_image(dataset_id, image[1], image[2], filename)
         image_data = {'dataset_id': dataset_id, 'image_set': image[0], 'image_name': image[1], 'image_url': uploaded_image_url} # image_url = image[2] for mock
         client['yolo_datasets']['dataset_images'].insert_one(image_data)
     for label in labels:
